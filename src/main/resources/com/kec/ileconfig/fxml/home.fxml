@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckMenuItem?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Menu?>
+<?import javafx.scene.control.MenuBar?>
+<?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.SeparatorMenuItem?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<VBox alignment="CENTER" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.kec.ileconfig.controllers.HomeController">
+   <children>
+      <MenuBar>
+         <menus>
+            <Menu mnemonicParsing="false" text="ILEConfig">
+               <items>
+                  <CheckMenuItem fx:id="toggleTesting" mnemonicParsing="false" onAction="#onToggleTesting" text="Enable Testing (Exits)" />
+                  <Menu fx:id="changeThemeMenu" mnemonicParsing="false" text="Change Theme" />
+                  <SeparatorMenuItem mnemonicParsing="false" />
+                  <MenuItem fx:id="resetApp" mnemonicParsing="false" onAction="#onResetApp" text="Reset" />
+                  <MenuItem mnemonicParsing="false" onAction="#onClose" text="Close" />
+               </items>
+            </Menu>
+            <Menu mnemonicParsing="false" text="File" />
+            <Menu mnemonicParsing="false" text="Edit" />
+            <Menu mnemonicParsing="false" text="Help" />
+         </menus>
+      </MenuBar>
+      <VBox alignment="CENTER_LEFT" VBox.vgrow="ALWAYS">
+         <VBox.margin>
+            <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+         </VBox.margin>
+         <children>
+            <Label text="Configurations">
+               <font>
+                  <Font size="18.0" />
+               </font>
+            </Label>
+            <GridPane alignment="CENTER_LEFT" hgap="10.0" vgap="10.0" VBox.vgrow="ALWAYS">
+              <columnConstraints>
+                <ColumnConstraints halignment="LEFT" hgrow="ALWAYS" />
+                <ColumnConstraints halignment="LEFT" hgrow="ALWAYS" />
+              </columnConstraints>
+              <rowConstraints>
+                <RowConstraints valignment="CENTER" vgrow="NEVER" />
+                <RowConstraints valignment="CENTER" vgrow="NEVER" />
+                  <RowConstraints valignment="CENTER" vgrow="NEVER" />
+                  <RowConstraints valignment="CENTER" vgrow="NEVER" />
+                  <RowConstraints valignment="CENTER" vgrow="NEVER" />
+                  <RowConstraints valignment="CENTER" vgrow="ALWAYS" />
+                  <RowConstraints valignment="CENTER" vgrow="NEVER" />
+                  <RowConstraints valignment="CENTER" vgrow="NEVER" />
+                  <RowConstraints valignment="CENTER" vgrow="NEVER" />
+              </rowConstraints>
+               <children>
+                  <Label text="Working Directory" GridPane.hgrow="ALWAYS" />
+                  <Label text="Output Folder Name" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" />
+                  <HBox alignment="TOP_CENTER" GridPane.columnIndex="1" GridPane.rowIndex="1" GridPane.valignment="TOP">
+                     <children>
+                        <TextField fx:id="outputFolderField" promptText="Name" HBox.hgrow="ALWAYS" />
+                        <Button mnemonicParsing="false" onAction="#onSaveOutputFolderName" text="Save" />
+                     </children>
+                  </HBox>
+                  <HBox alignment="TOP_CENTER" GridPane.rowIndex="1" GridPane.valignment="TOP">
+                     <children>
+                        <TextField fx:id="workingDirField" editable="false" promptText="path/to/directory" HBox.hgrow="ALWAYS" />
+                        <Button mnemonicParsing="false" onAction="#onChangeWorkingDir" text="Change..." />
+                     </children>
+                  </HBox>
+                  <Label text="First ILE Number" GridPane.rowIndex="2" />
+                  <Label text="Input Delimiter" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                  <HBox alignment="CENTER_LEFT" GridPane.rowIndex="3" GridPane.valignment="TOP">
+                     <children>
+                        <TextField fx:id="firstILENoField" promptText="12345" HBox.hgrow="ALWAYS" />
+                        <Button mnemonicParsing="false" onAction="#onSaveFirstILENo" text="Save" />
+                     </children>
+                  </HBox>
+                  <HBox alignment="TOP_CENTER" GridPane.columnIndex="1" GridPane.rowIndex="3" GridPane.valignment="TOP">
+                     <children>
+                        <TextField fx:id="regexDelimiterField" promptText="item | item | item" HBox.hgrow="ALWAYS" />
+                        <Button mnemonicParsing="false" onAction="#onSaveRegexDelimiter" text="Save" />
+                     </children>
+                  </HBox>
+                  <Label text="First VE Number" GridPane.rowIndex="4" />
+                  <HBox alignment="TOP_CENTER" GridPane.rowIndex="5">
+                     <children>
+                        <TextField fx:id="firstVENoField" promptText="12345" HBox.hgrow="ALWAYS" />
+                        <Button mnemonicParsing="false" onAction="#onSaveFirstVENo" text="Save" />
+                     </children>
+                  </HBox>
+               </children>
+               <padding>
+                  <Insets bottom="10.0" right="10.0" top="10.0" />
+               </padding>
+            </GridPane>
+            <HBox alignment="CENTER_RIGHT" spacing="10.0" VBox.vgrow="NEVER">
+               <children>
+                  <Button fx:id="viewResultBtn" mnemonicParsing="false" onAction="#onViewResults" text="View Result" visible="false" />
+                  <Button fx:id="startBtn" defaultButton="true" mnemonicParsing="false" onAction="#onStart" text="Start" />
+               </children>
+            </HBox>
+         </children>
+      </VBox>
+   </children>
+</VBox>

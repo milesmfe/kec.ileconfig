@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckMenuItem?>
+<?import javafx.scene.control.Menu?>
+<?import javafx.scene.control.MenuBar?>
+<?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.SeparatorMenuItem?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox alignment="TOP_CENTER" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.kec.ileconfig.controllers.TestController">
+   <children>
+      <MenuBar>
+        <menus>
+            <Menu mnemonicParsing="false" text="ILEConfig">
+              <items>
+                  <CheckMenuItem fx:id="toggleTesting" mnemonicParsing="false" onAction="#onToggleTesting" text="Enable Testing (Exits)" />
+                  <Menu fx:id="changeThemeMenu" mnemonicParsing="false" text="Change Theme" />
+                  <SeparatorMenuItem mnemonicParsing="false" />
+                  <MenuItem fx:id="resetApp" mnemonicParsing="false" onAction="#onResetApp" text="Reset" />
+                <MenuItem mnemonicParsing="false" onAction="#onClose" text="Close" />
+              </items>
+            </Menu>
+          <Menu mnemonicParsing="false" text="File" />
+          <Menu mnemonicParsing="false" text="Edit" />
+          <Menu mnemonicParsing="false" text="Help" />
+        </menus>
+      </MenuBar>
+      <VBox alignment="CENTER" spacing="10.0" VBox.vgrow="ALWAYS">
+         <VBox.margin>
+            <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+         </VBox.margin>
+         <children>
+            <Button fx:id="testBtn" mnemonicParsing="false" onAction="#onTest" text="Test" />
+         </children>
+      </VBox>
+   </children>
+</VBox>
