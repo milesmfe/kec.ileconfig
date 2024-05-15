@@ -1,15 +1,8 @@
 package com.kec.ileconfig.process;
 
 public class ILEProcess extends Process {
-    // private final int currencyCdIdx = 57; // Currency Code
-    // private final int salesQtyIdx = 59; // Sales Quantity
-    // private final int invQtyIdx = 10; // Invoiced Quantity
     private final int countryRegCdIdx = 18; // Country/Region Code
-    // private final int docTypeIdx = 28; // Document Type
     private final int globalDim1CdIdx = 13; // Global Dimention 1 Code
-    // private final int globalDim2CdIdx = 14; // Global Dimention 1 Code
-
-    // private final String invString = "Sales"; // Invoice String
 
     @Override
     protected void addEntryNoToSet(String entryNo) {
@@ -32,18 +25,7 @@ public class ILEProcess extends Process {
                 for (int j = 0; j < original.length; j++) {
                     output[j][i] = original[j][columnIndex]; // Map the data to the corresponding column in the output
                 }
-            // } else if (i == currencyCdIdx) {
-            //     output[0][i] = newHeaders[i];
-            //     for (int j = 1; j < original.length; j++) {
-            //         String checkVal = original[j][countryRegCdIdx];
-            //         output[j][i] = checkVal.equals("DE") | checkVal.equals("NL") ? "EUR" : ""; // Map the data to the corresponding column in the output
-            //     }
-            // } else if (i == salesQtyIdx) {
-            //     output[0][i] = newHeaders[i];
-            //     for (int j = 1; j < original.length; j++) {
-            //         String checkVal = original[j][docTypeIdx];
-            //         output[j][i] = checkVal.equals(invString) ? original[j][invQtyIdx] : ""; // Map the data to the corresponding column in the output
-            //     }
+                
             } else if (i == globalDim1CdIdx) {
                 output[0][i] = newHeaders[i];
                 for (int j = 1; j < original.length; j++) {
