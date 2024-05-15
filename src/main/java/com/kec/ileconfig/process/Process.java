@@ -48,7 +48,7 @@ public class Process implements Runnable {
         FileManagement.createFolder(outputDir);
         HashMap<String, String[][]> output = new HashMap<>();
         for (Entry<String, String[][]> csvEntry : outputCSVMap.entrySet()) {
-            String[][] data = updateCSVEntryOnGetCSVMap(updateEntryNo(csvEntry.getValue()));
+            String[][] data = updateEntryNo(csvEntry.getValue());
             output.put(csvEntry.getKey(), data);
         }
         return output;
@@ -93,6 +93,8 @@ public class Process implements Runnable {
             String entryNoIValue = output[rowIdx][entryNoIdx];
             output[rowIdx][entryNoIdx] = controller.getEntryNo(entryNoIValue);
         }
+        output = updateCSVEntryOnGetCSVMap(output);
+
         return output;
     }
 
@@ -137,7 +139,7 @@ public class Process implements Runnable {
                     processedCSV[rowIdx][custIdx] = ConfigMaps.getCustomerMapFor(custValue).getNAV17();
                 }
                 // Change all location codes to HISTORY
-                processedCSV[rowIdx][locationCodeIdx] = "HISTORY";
+                processedCSV[rowIdx][locationCodeIdx] = "SALESHIST";
 
                 // Update the controller entry number set
                 this.addEntryNoToSet(processedCSV[rowIdx][entryNoIdx]);
