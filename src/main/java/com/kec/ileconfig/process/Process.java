@@ -49,10 +49,85 @@ public class Process implements Runnable {
         HashMap<String, String[][]> output = new HashMap<>();
         for (Entry<String, String[][]> csvEntry : outputCSVMap.entrySet()) {
             String[][] data = updateEntryNo(csvEntry.getValue());
+            data = updateCSVEntryOnGetCSVMap(data);
             output.put(csvEntry.getKey(), data);
         }
         return output;
     }
+
+    protected HashMap<String, String[][]> getSplitOutputCSVMap(int numberOfSplits) {
+        HashMap<String, String[][]> splitOutputCSVMap = new HashMap<>();
+        for (Entry<String, String[][]> entry : getCSVMap().entrySet()) {
+            String key = entry.getKey();
+            String[][] data = entry.getValue();
+    
+            int rowsPerSplit = data.length / numberOfSplits;
+            int remainingRows = data.length % numberOfSplits;
+    
+            int startIdx = 0;
+            int endIdx = 0;
+    
+            for (int splitNum = 0; splitNum < numberOfSplits; splitNum++) {
+                String newKey = key.replace(".xlsx", " - " + (char)('A' + splitNum) + ".xlsx");
+    
+                // Ensure that the row above the split line has an even row index
+                if (startIdx > 0 && startIdx % 2 != 0) {
+                    startIdx++;
+                }
+
+                // Calculate the end index for this split
+                endIdx = Math.min(startIdx + rowsPerSplit, data.length - 1);
+
+                // Create the split array
+                String[][] splitData = new String[endIdx - startIdx + 1][data[0].length];
+
+                // Copy the header to the split array
+                splitData[0] = data[0];
+
+                // Copy the rows to the split array
+                for (int i = startIdx + 1; i <= endIdx; i++) {
+                    splitData[i - startIdx] = data[i];
+                }
+    
+                // Store the split data in splitOutputCSVMap
+                splitOutputCSVMap.put(newKey, splitData);
+    
+                // Update start index for the next split
+                startIdx = endIdx;
+            }
+        }
+        return splitOutputCSVMap;
+    }
+    
+
+    protected String[][] generateBuddyArray(String[][] input) {
+        return input.clone();
+    }
+
+
+    private String[][] combineArrays(String[][] buddy, String[][] original) {
+        int length = buddy.length;
+        if (length != original.length) {
+            throw new IllegalArgumentException("Arrays must be of the same length");
+        }
+    
+        int columns = buddy[0].length;
+        String[][] combinedArray = new String[length * 2][columns];
+        
+        // Add header from original
+        combinedArray[0] = original[0];
+
+        for (int i = 1; i < length; i++) {
+            // Add entries from buddy
+            combinedArray[2 * i - 1] = original[i];
+
+            // Add entries from original
+            combinedArray[2 * i] = buddy[i];
+        }
+    
+        return combinedArray;
+    }
+
 
     @Override
     public void run() {
@@ -75,7 +150,9 @@ public class Process implements Runnable {
                 }
 
                 String outputFile = outputDir + File.separator + file.getName().replace(".csv", ".xlsx");
-                outputCSVMap.put(outputFile, processedData);
+                String[][] buddyData = generateBuddyArray(processedData.clone());
+                String[][] combinedData = combineArrays(buddyData, processedData);
+                outputCSVMap.put(outputFile, combinedData);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -92,9 +169,8 @@ public class Process implements Runnable {
         for (int rowIdx = 1; rowIdx < output.length; rowIdx++) {
             String entryNoIValue = output[rowIdx][entryNoIdx];
             output[rowIdx][entryNoIdx] = controller.getEntryNo(entryNoIValue);
-        }
-        output = updateCSVEntryOnGetCSVMap(output);
 
+        }
         return output;
     }
 
@@ -139,7 +215,7 @@ public class Process implements Runnable {
                     processedCSV[rowIdx][custIdx] = ConfigMaps.getCustomerMapFor(custValue).getNAV17();
                 }
                 // Change all location codes to HISTORY
-                processedCSV[rowIdx][locationCodeIdx] = "SALESHIST";
+                processedCSV[rowIdx][locationCodeIdx] = "CUS-HIS";
 
                 // Update the controller entry number set
                 this.addEntryNoToSet(processedCSV[rowIdx][entryNoIdx]);

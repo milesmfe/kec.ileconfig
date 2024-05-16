@@ -2,11 +2,17 @@ package com.kec.ileconfig.process;
 
 public class VEProcess extends Process {
 
+    private final int entryNoIdx = 0; // Entry Number
     private final int veILEEntryNoIdx = 10; // Item Ledger Entry Number
     private final int salesAmtExptIdx = 43; // Sales Amount (Expected)
     private final int salesAmtActualIdx = 15; // Sales Amount (Actual)
     private final int costAmtActualIdx = 24; // Cost Amount (Actual)
     private final int costAmtExptIdx = 44; // Cost Amount (Expected)
+    // private final int postingDateIdx = 2; // Posting Date
+    private final int ileTypeIDX = 3; // Entry Type
+    private final int valuedQuantityIdx = 11; // Quantity
+    private final int ileQuantityIdx = 12; // ILE Quantity
+    private final int invoicedQuantityIdx = 13; // Invoiced Quantity
 
     /**
      * Create a new {@link #VEProcess} for processing VE csv files
@@ -26,6 +32,57 @@ public class VEProcess extends Process {
     }
 
     @Override
+    protected String[][] generateBuddyArray(String[][] input) {
+        // Create a new array with the same dimensions as the input array
+        String[][] output = new String[input.length][];
+        
+        // Iterate over each row of the input array
+        for (int i = 0; i < input.length; i++) {
+            // Copy each row of the input array to the corresponding row of the output array
+            output[i] = new String[input[i].length];
+            System.arraycopy(input[i], 0, output[i], 0, input[i].length);
+        }
+        
+        // Perform modifications on the cloned array
+        for (int i = 1; i < input.length; i++) {
+            String quantity = output[i][valuedQuantityIdx];
+            String invoicedQuantity = output[i][invoicedQuantityIdx];
+            String ileQuantity = output[i][ileQuantityIdx];
+    
+            Integer veILEEntryNo = 0;
+            try {
+                veILEEntryNo = Integer.parseInt(output[i][veILEEntryNoIdx]) * -1;
+            } catch (NumberFormatException e) {
+                System.err.println("Error parsing ILE Entry No");
+                continue;
+            }
+            Integer entryNo = 0;
+            try {
+                entryNo = Integer.parseInt(output[i][entryNoIdx]) * -1;
+            } catch (NumberFormatException e) {
+                System.err.println("Error parsing ILE Entry No");
+                continue;
+            }
+            String adjustmentType = "Positive";
+            float quantityFloat = Float.parseFloat(quantity);
+            float invoicedQuantityFloat = Float.parseFloat(invoicedQuantity);
+            float ileQuantityFloat = Float.parseFloat(ileQuantity);
+            if (quantityFloat >= 0) {
+                adjustmentType = "Negative";
+            }        
+            output[i][ileTypeIDX] = adjustmentType + "Adjustment";
+            output[i][valuedQuantityIdx] = String.valueOf(quantityFloat * -1);
+            output[i][invoicedQuantityIdx] = String.valueOf(invoicedQuantityFloat * -1);
+            output[i][ileQuantityIdx] = String.valueOf(ileQuantityFloat * -1);
+            output[i][veILEEntryNoIdx] = String.valueOf(veILEEntryNo);
+            output[i][entryNoIdx] = String.valueOf(entryNo);
+            addEntryNoToSet(entryNo.toString());
+        }
+        return output;
+    }    
+    
+
+    @Override
     protected String[][] updateCSVEntryOnGetCSVMap(String[][] input) {
         String[] newHeaders = ConfigMaps.getVEOutputFields(); // Get new headers
         String[][] original = updateILEEntryNo(input.clone()); // Clone the original data and update if necessary
@@ -43,22 +100,30 @@ public class VEProcess extends Process {
                 }
             }
             for (int rowIdx = 1; rowIdx < output.length; rowIdx++) {
+                // String postingDate = output[rowIdx][postingDateIdx];
+                // Float exchangeFactor = ConfigMaps.getForexRateFor(postingDate);
+
                 String salesAmountActual = output[rowIdx][salesAmtActualIdx];
                 String salesAmountExpt = output[rowIdx][salesAmtExptIdx];
                 String costAmountActual = output[rowIdx][costAmtActualIdx];
                 String costAmountExpt = output[rowIdx][costAmtExptIdx];
+
                 if (salesAmountActual != null && salesAmountExpt != null && costAmountActual != null && costAmountExpt != null) {
                     if (salesAmountActual.indexOf(".") != salesAmountActual.lastIndexOf(".")) {
                         salesAmountActual = salesAmountActual.substring(0, salesAmountActual.indexOf(".")) + salesAmountActual.substring(salesAmountActual.indexOf(".") + 1);
+                        // salesAmountActual = String.valueOf(Float.valueOf(salesAmountActual) * exchangeFactor);
                     }
                     if (salesAmountExpt.indexOf(".") != salesAmountExpt.lastIndexOf(".")) {
                         salesAmountExpt = salesAmountExpt.substring(0, salesAmountExpt.indexOf(".")) + salesAmountExpt.substring(salesAmountExpt.indexOf(".") + 1);
+                        // salesAmountExpt = String.valueOf(Float.valueOf(salesAmountExpt) * exchangeFactor);
                     }
                     if (costAmountActual.indexOf(".") != costAmountActual.lastIndexOf(".")) {
                         costAmountActual = costAmountActual.substring(0, costAmountActual.indexOf(".")) + costAmountActual.substring(costAmountActual.indexOf(".") + 1);
+                        // costAmountActual = String.valueOf(Float.valueOf(costAmountActual) * exchangeFactor);
                     }
                     if (costAmountExpt.indexOf(".") != costAmountExpt.lastIndexOf(".")) {
                         costAmountExpt = costAmountExpt.substring(0, costAmountExpt.indexOf(".")) + costAmountExpt.substring(costAmountExpt.indexOf(".") + 1);
+                        // costAmountExpt = String.valueOf(Float.valueOf(costAmountExpt) * exchangeFactor);
                     }
                     try {
                         // If the actual sales amount is 0 and the expected sales amount is not 0, update the actual sales amount to the expected sales amount and set the expected sales amount to 0

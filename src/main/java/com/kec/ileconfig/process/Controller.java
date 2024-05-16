@@ -1,5 +1,7 @@
 package com.kec.ileconfig.process;
 
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -24,6 +26,9 @@ public class Controller implements Runnable {
 
     private Process ileProcess = null; // The attached ileProcess
     private Process veProcess = null; // The attached veProcess
+
+    private volatile double progress = 0.0; // Progress of the this process
+    private final PropertyChangeSupport pcs = new PropertyChangeSupport(this); // Property change support for progress
 
     private volatile int ileNoCount; // A counter for updating ILE entryNos with a given first index
     private volatile int veNoCount; // A counter for updating VE entryNos with a given first index
@@ -64,6 +69,24 @@ public class Controller implements Runnable {
         this.veProcess = new VEProcess(this, veWorkingDir, veOutputDir, vebinDir, regexDelimiter);
     }
 
+    public double getProgress() {
+        return progress;
+    }
+
+    public void setProgress(double progress) {
+        double oldProgress = this.progress;
+        this.progress = progress;
+        pcs.firePropertyChange("progress", oldProgress, progress);
+    }
+
+    public void addProgressChangeListener(PropertyChangeListener listener) {
+        pcs.addPropertyChangeListener(listener);
+    }
+
+    public void removeProgressChangeListener(PropertyChangeListener listener) {
+        pcs.removePropertyChangeListener(listener);
+    }
+
     private void putILENo(String ileNo) {
         entryNoMap.put(ileNo, String.valueOf(ileNoCount++));
     }
@@ -71,7 +94,8 @@ public class Controller implements Runnable {
     private void putVENo(String veNo) {
         entryNoMap.put(veNo, String.valueOf(veNoCount++));
     }
-
+    
+    
     /**
      * Sorts entryNoSet and maps each value in ascending order.
      * Invokes {@link #putEntryNo} with each entryNo in the sorted list.
@@ -155,23 +179,28 @@ public class Controller implements Runnable {
 
         ileThread.start();
         veThread.start();
+        setProgress(0.2);
 
         try {
             // Wait for both threads to complete
             ileThread.join();
             veThread.join();
+            setProgress(0.6);
 
             // Run once both processes have completed
             Platform.runLater(() -> {
                 mapEntryNos(); // Map every entry number once all inputs are processed
-                outputCSVMap.putAll(ileProcess.getCSVMap());
-                outputCSVMap.putAll(veProcess.getCSVMap());
+                // outputCSVMap.putAll(ileProcess.getCSVMap());
+                // outputCSVMap.putAll(veProcess.getCSVMap());
+                outputCSVMap.putAll(ileProcess.getSplitOutputCSVMap(10));
+                outputCSVMap.putAll(veProcess.getSplitOutputCSVMap(10));
+                setProgress(0.8);
                 Thread saveExcelThread = new Thread(saveExcelTask);
                 saveExcelThread.start();
                 System.out.println("Final ILE No: " + ileNoCount);
                 System.out.println("Final VE No: " + veNoCount);
-
             });
+            setProgress(1.0);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

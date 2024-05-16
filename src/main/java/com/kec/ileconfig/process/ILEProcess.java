@@ -1,13 +1,58 @@
 package com.kec.ileconfig.process;
 
 public class ILEProcess extends Process {
+    private final int entryNoIdx = 0; // Entry No
     private final int countryRegCdIdx = 18; // Country/Region Code
     private final int globalDim1CdIdx = 13; // Global Dimention 1 Code
+    private final int entryTypeIdx = 3; // Entry Type
+    private final int quantityIdx = 8; // Quantity
+    private final int invoicedQuantityIdx = 10; // Invoiced Quantity
 
     @Override
     protected void addEntryNoToSet(String entryNo) {
         controller.addILENoToSet(entryNo);
     }
+
+    @Override
+    protected String[][] generateBuddyArray(String[][] input) {
+        // Create a new array with the same dimensions as the input array
+        String[][] output = new String[input.length][];
+        
+        // Iterate over each row of the input array
+        for (int i = 0; i < input.length; i++) {
+            // Copy each row of the input array to the corresponding row of the output array
+            output[i] = new String[input[i].length];
+            System.arraycopy(input[i], 0, output[i], 0, input[i].length);
+        }
+        
+        // Perform modifications on the cloned array
+        for (int i = 1; i < input.length; i++) {
+            String quantity = output[i][quantityIdx];
+            String invoicedQuantity = output[i][invoicedQuantityIdx];
+    
+            Integer entryNo = 0;
+            try {
+                entryNo = Integer.parseInt(output[i][entryNoIdx]) * -1;
+            } catch (NumberFormatException e) {
+                System.err.println("Error parsing ILE Entry No");
+                continue;
+            }
+    
+            String adjustmentType = "Positive";
+            float quantityFloat = Float.parseFloat(quantity);
+            float invoicedQuantityFloat = Float.parseFloat(invoicedQuantity);
+            if (quantityFloat >= 0) {
+                adjustmentType = "Negative";
+            }        
+            output[i][entryTypeIdx] = adjustmentType + "Adjustment";
+            output[i][quantityIdx] = String.valueOf(quantityFloat * -1);
+            output[i][invoicedQuantityIdx] = String.valueOf(invoicedQuantityFloat * -1);
+            output[i][entryNoIdx] = String.valueOf(entryNo);
+            addEntryNoToSet(entryNo.toString());
+        }
+        return output;
+    }    
+    
 
     @Override
     protected String[][] updateCSVEntryOnGetCSVMap(String[][] input) {

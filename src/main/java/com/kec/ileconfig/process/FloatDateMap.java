@@ -1,7 +1,6 @@
 package com.kec.ileconfig.process;
 
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.util.*;
 
 import org.apache.poi.ss.usermodel.Cell;
@@ -55,37 +54,42 @@ public class FloatDateMap {
         }
     }
 
-    public static FloatDateMap populateFromExcel(String filePath) throws IOException {
+    public static FloatDateMap populateFromExcel(String filePath) {
         FloatDateMap floatDateMap = new FloatDateMap();
 
-        FileInputStream file = new FileInputStream(filePath);
-        Workbook workbook = new XSSFWorkbook(file);
-        Sheet sheet = workbook.getSheetAt(0); // Assuming data is in the first sheet
+        try {
+            FileInputStream file = new FileInputStream(filePath);
+            Workbook workbook = new XSSFWorkbook(file);
+            Sheet sheet = workbook.getSheetAt(0); // Assuming data is in the first sheet
 
-        // Iterate over rows and populate the map
-        for (Row row : sheet) {
-            if (row.getRowNum() == 0) // Skip header row
-                continue;
+            // Iterate over rows and populate the map
+            for (Row row : sheet) {
+                if (row.getRowNum() == 0) // Skip header row
+                    continue;
 
-            Cell lowerCell = row.getCell(0);
-            Cell upperCell = row.getCell(1);
-            Cell eurCell = row.getCell(2);
-            Cell czkCell = row.getCell(3);
+                Cell lowerCell = row.getCell(0);
+                Cell upperCell = row.getCell(1);
+                Cell eurCell = row.getCell(2);
+                Cell czkCell = row.getCell(3);
 
-            // Assuming Lower, Upper, EUR, CZK are in columns A, B, C, D respectively
-            Date lowerDate = lowerCell.getDateCellValue();
-            Date upperDate = upperCell.getDateCellValue();
-            float eurValue = (float) eurCell.getNumericCellValue();
-            float czkValue = (float) czkCell.getNumericCellValue();
+                // Assuming Lower, Upper, EUR, CZK are in columns A, B, C, D respectively
+                Date lowerDate = lowerCell.getDateCellValue();
+                Date upperDate = upperCell.getDateCellValue();
+                float eurValue = (float) eurCell.getNumericCellValue();
+                float czkValue = (float) czkCell.getNumericCellValue();
 
-            floatDateMap.add(eurValue, lowerDate, upperDate);
-            floatDateMap.add(czkValue, lowerDate, upperDate);
+                floatDateMap.add(eurValue, lowerDate, upperDate);
+                floatDateMap.add(czkValue, lowerDate, upperDate);
+            }
+
+            workbook.close();
+            file.close();
+
+            return floatDateMap;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
         }
-
-        workbook.close();
-        file.close();
-
-        return floatDateMap;
     }
 }
-

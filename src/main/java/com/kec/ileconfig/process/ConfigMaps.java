@@ -1,12 +1,15 @@
 package com.kec.ileconfig.process;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Map;
 import java.util.Set;
 
 public class ConfigMaps {
 
     private static final String[] ILEFields = {
-            "Entry No.",
+            "Entry No.", // 0
             "Item No.",
             "Posting Date",
             "Entry Type",
@@ -83,20 +86,20 @@ public class ConfigMaps {
     };
 
     private static final String[] VEFields = {
-            "Entry No.",
+            "Entry No.", 
             "Item No.",
             "Posting Date",
-            "Item Ledger Entry Type",
+            "Item Ledger Entry Type", // 3
             "Source No.",
             "Document No.",
             "Description",
             "Location Code",
             "Inventory Posting Group",
             "Source Posting Group",
-            "Item Ledger Entry No.",
-            "Valued Quantity",
-            "Item Ledger Entry Quantity",
-            "Invoiced Quantity",
+            "Item Ledger Entry No.", // 10
+            "Valued Quantity", // 11
+            "Item Ledger Entry Quantity", // 12
+            "Invoiced Quantity", // 13
             "Cost per Unit",
             "Sales Amount (Actual)",
             "Salespers./Purch. Code",
@@ -159,17 +162,17 @@ public class ConfigMaps {
     };
 
     private static final String[] ILEOutputFields = {
-        "Entry No.",
+        "Entry No.", // 0
         "Item No.",
         "Posting Date",
-        "Entry Type",
+        "Entry Type", // 3
         "Source No.",
         "Document No.",
         "Description",
         "Location Code",
-        "Quantity",
-        "Remaining Quantity",
-        "Invoiced Quantity",
+        "Quantity", // 8
+        "Remaining Quantity", // 9
+        "Invoiced Quantity", // 10
         "Applies-to Entry",
         "Open",
         "Global Dimension 1 Code",
@@ -226,18 +229,18 @@ public class ConfigMaps {
     private static final String[] VEOutputFields = {
         "Entry No.",
         "Item No.",
-        "Posting Date",
-        "Item Ledger Entry Type",
+        "Posting Date", // 2
+        "Item Ledger Entry Type", // 3
         "Source No.",
         "Document No.",
         "Description",
         "Location Code",
         "Inventory Posting Group",
         "Source Posting Group",
-        "Item Ledger Entry No.",
-        "Valued Quantity",
-        "Item Ledger Entry Quantity",
-        "Invoiced Quantity",
+        "Item Ledger Entry No.", // 10
+        "Valued Quantity", // 11
+        "Item Ledger Entry Quantity", // 12
+        "Invoiced Quantity", // 13
         "Cost per Unit",
         "Sales Amount (Actual)", // 15
         "Salespers./Purch. Code",
@@ -323,6 +326,10 @@ public class ConfigMaps {
             Map.entry("121380", new CustomerEntry("121380NL", "Unicorn Displays B.V.")),
             Map.entry("122360", new CustomerEntry("122360NL", "Romazo")));
 
+
+    // private static final FloatDateMap forexMap = FloatDateMap.populateFromExcel(null);
+
+
     public static String[] getILEFields() {
         return ILEFields.clone();
     }
@@ -346,6 +353,21 @@ public class ConfigMaps {
     public static CustomerEntry getCustomerMapFor(String customerId) {
         return customerMap.get(customerId);
     }
+
+    // public static FloatDateMap getForexMap() {
+    //     return forexMap;
+    // }
+
+    // public static Float getForexRateFor(String date) {
+    //     SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yy");
+    //     try {
+    //         Date formattedDate = dateFormat.parse(date);
+    //         return forexMap.findFloatFromDate(formattedDate);
+    //     } catch (ParseException e) {
+    //         e.printStackTrace();
+    //         return null;
+    //     }
+    // }
 
     private ConfigMaps() {
         throw new AssertionError("Do not instantiate ConfigMaps");
