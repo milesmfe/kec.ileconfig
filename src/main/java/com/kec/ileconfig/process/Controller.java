@@ -3,24 +3,19 @@ package com.kec.ileconfig.process;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
 
 import com.kec.ileconfig.io.ExcelManagement;
-import com.kec.ileconfig.io.FileManagement;
 
-import javafx.application.Platform;
 import javafx.concurrent.Task;
 
-@SuppressWarnings("unused")
 public class Controller implements Runnable {
-    private final String workingDir; // Location of relevant files
     private final String outputDir; // Folder name for output contents
     private final String binDir; // Location for tempory files used in processing to be stored
 
@@ -38,6 +33,8 @@ public class Controller implements Runnable {
 
     private HashMap<String, String[][]> outputCSVMap = new HashMap<>(); // Final output from ILE and VE processes
 
+    private final CountDownLatch latch; // Latch for synchronizing threads
+
     /**
      * Create a new {@link #Controller} for handling the processing of ILE and VE
      * files
@@ -51,7 +48,6 @@ public class Controller implements Runnable {
      * 
      */
     public Controller(String workingDir, String outputFolder, int firstILENo, int firstVENo, String regexDelimiter) {
-        this.workingDir = workingDir;
         this.outputDir = workingDir + File.separator + outputFolder;
         this.binDir = this.outputDir + File.separator + "IGNORE";
         ileNoCount = firstILENo;
@@ -67,6 +63,8 @@ public class Controller implements Runnable {
 
         this.ileProcess = new ILEProcess(this, ileWorkingDir, ileOutputDir, ilebinDir, regexDelimiter);
         this.veProcess = new VEProcess(this, veWorkingDir, veOutputDir, vebinDir, regexDelimiter);
+
+        this.latch = new CountDownLatch(2); // Two threads: ILE and VE
     }
 
     public double getProgress() {
@@ -94,8 +92,7 @@ public class Controller implements Runnable {
     private void putVENo(String veNo) {
         entryNoMap.put(veNo, String.valueOf(veNoCount++));
     }
-    
-    
+
     /**
      * Sorts entryNoSet and maps each value in ascending order.
      * Invokes {@link #putEntryNo} with each entryNo in the sorted list.
@@ -144,6 +141,7 @@ public class Controller implements Runnable {
             @Override
             protected Void call() throws Exception {
                 ileProcess.run(); // Process ILEs
+                latch.countDown(); // Signal the completion of ILE thread
                 return null;
             }
         };
@@ -152,6 +150,7 @@ public class Controller implements Runnable {
             @Override
             protected Void call() throws Exception {
                 veProcess.run(); // Process VEs
+                latch.countDown(); // Signal the completion of VE thread
                 return null;
             }
         };
@@ -183,25 +182,31 @@ public class Controller implements Runnable {
 
         try {
             // Wait for both threads to complete
-            ileThread.join();
-            veThread.join();
+            latch.await();
             setProgress(0.6);
 
             // Run once both processes have completed
-            Platform.runLater(() -> {
-                mapEntryNos(); // Map every entry number once all inputs are processed
-                // outputCSVMap.putAll(ileProcess.getCSVMap());
-                // outputCSVMap.putAll(veProcess.getCSVMap());
-                outputCSVMap.putAll(ileProcess.getSplitOutputCSVMap(10));
-                outputCSVMap.putAll(veProcess.getSplitOutputCSVMap(10));
-                setProgress(0.8);
-                Thread saveExcelThread = new Thread(saveExcelTask);
-                saveExcelThread.start();
-                System.out.println("Final ILE No: " + ileNoCount);
-                System.out.println("Final VE No: " + veNoCount);
-            });
+            mapEntryNos(); // Map every entry number once all inputs are processed
+            // outputCSVMap.putAll(ileProcess.getCSVMap());
+            // outputCSVMap.putAll(veProcess.getCSVMap());
+            outputCSVMap.putAll(ileProcess.getSplitOutputCSVMap(10));
+            outputCSVMap.putAll(veProcess.getSplitOutputCSVMap(10));
+            setProgress(0.8);
+            Thread saveExcelThread = new Thread(saveExcelTask);
+            saveExcelThread.start();
+            try {
+                // Wait for saveExcelThread to complete
+                saveExcelThread.join();
+            } catch (InterruptedException e) {
+                System.out.println("Error: Excel save thread interrupted");
+                e.printStackTrace();
+            }
+            System.out.println("Final ILE No: " + ileNoCount);
+            System.out.println("Final VE No: " + veNoCount);
+
             setProgress(1.0);
         } catch (InterruptedException e) {
+            System.out.println("Error: ILE and VE threads interrupted");
             e.printStackTrace();
         }
     }
