@@ -1,5 +1,6 @@
 package com.kec.ileconfig.controllers;
 
+import java.beans.PropertyChangeListener;
 import java.io.File;
 
 import com.kec.ileconfig.process.Controller;
@@ -9,6 +10,7 @@ import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
+import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextField;
 import javafx.stage.DirectoryChooser;
 
@@ -40,6 +42,9 @@ public class HomeController extends DefaultController {
 
     @FXML
     private TextField workingDirField;
+
+    @FXML
+    private ProgressBar progressBar;
 
     @FXML
     void onChangeWorkingDir(ActionEvent event) {
@@ -145,6 +150,13 @@ public class HomeController extends DefaultController {
             @Override
             protected Void call() throws Exception {
                 Controller controllerProcess = new Controller(workingDir, outputFolder, Integer.parseInt(firstILENo), Integer.parseInt(firstVENo), regexDelimiter);
+                controllerProcess.addProgressChangeListener(new PropertyChangeListener() {
+                    @Override
+                    public void propertyChange(java.beans.PropertyChangeEvent evt) {
+                        // Update the progress bar
+                        progressBar.setProgress((double) evt.getNewValue());
+                    }
+                });
                 controllerProcess.run(); // Start the Controller
                 return null;
             }
@@ -155,6 +167,7 @@ public class HomeController extends DefaultController {
             // Show processing indicator or status
             System.out.println("Processing...");
             viewResultBtn.setVisible(false);
+            progressBar.setVisible(true);
         });
 
         controllerTask.setOnSucceeded(e -> {
@@ -162,12 +175,14 @@ public class HomeController extends DefaultController {
             System.out.println("Processing completed.");
             startBtn.setDisable(false);
             viewResultBtn.setVisible(true);
+            progressBar.setVisible(false);
         });
 
         controllerTask.setOnFailed(e -> {
             // Update UI when task fails
             System.out.println("Processing failed: " + controllerTask.getException().getMessage());
             startBtn.setDisable(false);
+            progressBar.setVisible(false);
         });
 
         // Start the task in a new thread
@@ -182,6 +197,7 @@ public class HomeController extends DefaultController {
 
         // Hide the viewResultBtn
         viewResultBtn.setVisible(false);
+        progressBar.setVisible(false);
 
         // Get the initial values for the fields
         workingDir = Settings.getWorkingDirHistory();
@@ -196,13 +212,5 @@ public class HomeController extends DefaultController {
         firstILENoField.setText(firstILENo);
         firstVENoField.setText(firstVENo);
         regexDelimiterField.setText(regexDelimiter);
-
-        assert firstILENoField != null : "fx:id=\"firstILENoField\" was not injected: check your FXML file 'home.fxml'.";
-        assert firstVENoField != null : "fx:id=\"firstVENoField\" was not injected: check your FXML file 'home.fxml'.";        
-        assert outputFolderField != null : "fx:id=\"outputFolderField\" was not injected: check your FXML file 'home.fxml'.";
-        assert regexDelimiterField != null : "fx:id=\"regexDelimiterField\" was not injected: check your FXML file 'home.fxml'.";
-        assert startBtn != null : "fx:id=\"startBtn\" was not injected: check your FXML file 'home.fxml'.";
-        assert workingDirField != null : "fx:id=\"workingDirField\" was not injected: check your FXML file 'home.fxml'.";
-        assert viewResultBtn != null : "fx:id=\"viewResultBtn\" was not injected: check your FXML file 'home.fxml'.";
     }
 }

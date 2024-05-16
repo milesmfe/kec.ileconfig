@@ -7,6 +7,7 @@
 <?import javafx.scene.control.Menu?>
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.ProgressBar?>
 <?import javafx.scene.control.SeparatorMenuItem?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.ColumnConstraints?>
@@ -103,6 +104,11 @@
             </GridPane>
             <HBox alignment="CENTER_RIGHT" spacing="10.0" VBox.vgrow="NEVER">
                <children>
+                  <HBox alignment="CENTER_LEFT" HBox.hgrow="ALWAYS">
+                     <children>
+                        <ProgressBar fx:id="progressBar" progress="0.0" visible="false" HBox.hgrow="ALWAYS" />
+                     </children>
+                  </HBox>
                   <Button fx:id="viewResultBtn" mnemonicParsing="false" onAction="#onViewResults" text="View Result" visible="false" />
                   <Button fx:id="startBtn" defaultButton="true" mnemonicParsing="false" onAction="#onStart" text="Start" />
                </children>
