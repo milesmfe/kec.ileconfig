@@ -6,13 +6,17 @@ import java.io.File;
 import com.kec.ileconfig.process.Controller;
 import com.kec.ileconfig.settings.Settings;
 
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
+import javafx.scene.control.ListView;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextField;
 import javafx.stage.DirectoryChooser;
+import javafx.stage.FileChooser;
 
 public class HomeController extends DefaultController {
 
@@ -21,6 +25,8 @@ public class HomeController extends DefaultController {
     private String firstILENo;
     private String firstVENo;
     private String regexDelimiter;
+    private String forexFile;
+    private ObservableList<String> logList;
 
     @FXML
     private TextField firstILENoField;
@@ -35,6 +41,9 @@ public class HomeController extends DefaultController {
     private TextField regexDelimiterField;
 
     @FXML
+    private TextField forexFileField;
+
+    @FXML
     private Button startBtn;
 
     @FXML
@@ -42,6 +51,9 @@ public class HomeController extends DefaultController {
 
     @FXML
     private TextField workingDirField;
+
+    @FXML
+    private ListView<String> logListView;
 
     @FXML
     private ProgressBar progressBar;
@@ -83,6 +95,17 @@ public class HomeController extends DefaultController {
         regexDelimiter = regexDelimiterField.getText();
         Settings.setRegexDelimiterHistory(regexDelimiter);
         regexDelimiterField.setStyle("-fx-border-color: none;");
+    }
+
+    @FXML
+    void onChangeForexFile(ActionEvent event) {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Select Forex File");
+        File file = fileChooser.showOpenDialog(forexFileField.getScene().getWindow());
+        forexFile = file == null ? "" : file.getAbsolutePath();
+        forexFileField.setText(forexFile);
+        Settings.setForexFileHistory(forexFile);
+        forexFileField.setStyle("-fx-border-color: none;");
     }
 
     @FXML
@@ -137,6 +160,13 @@ public class HomeController extends DefaultController {
             regexDelimiterField.setStyle("-fx-border-color: none;");
         }
 
+        if (forexFile.isEmpty()) {
+            forexFileField.setStyle("-fx-border-color: red;");
+            flag = true;
+        } else {
+            forexFileField.setStyle("-fx-border-color: none;");
+        }
+
         // If any field is invalid, return
         if (flag) {
             return;
@@ -149,12 +179,20 @@ public class HomeController extends DefaultController {
         Task<Void> controllerTask = new Task<Void>() {
             @Override
             protected Void call() throws Exception {
-                Controller controllerProcess = new Controller(workingDir, outputFolder, Integer.parseInt(firstILENo), Integer.parseInt(firstVENo), regexDelimiter);
-                controllerProcess.addProgressChangeListener(new PropertyChangeListener() {
+                Controller controllerProcess = new Controller(workingDir, outputFolder, Integer.parseInt(firstILENo), Integer.parseInt(firstVENo), regexDelimiter, forexFile);
+                controllerProcess.addPropertyChangeListener(new PropertyChangeListener() {
                     @Override
                     public void propertyChange(java.beans.PropertyChangeEvent evt) {
                         // Update the progress bar
-                        progressBar.setProgress((double) evt.getNewValue());
+                        if ("log".equals(evt.getPropertyName())) {
+                            // Update the logs
+                            // logList.add(String.valueOf(evt.getNewValue()));
+                            logListView.scrollTo(logList.size() - 1);
+
+                        } else if ("progress".equals(evt.getPropertyName())) {
+                            // Update the progress bar
+                            progressBar.setProgress((double) evt.getNewValue());
+                        }
                     }
                 });
                 controllerProcess.run(); // Start the Controller
@@ -205,6 +243,8 @@ public class HomeController extends DefaultController {
         firstILENo = Settings.getFirstILENoHistory();
         firstVENo = Settings.getFirstVENoHistory();
         regexDelimiter = Settings.getRegexDelimiterHistory();
+        forexFile = Settings.getForexFileHistory();
+        logList = FXCollections.observableArrayList();
 
         // Set the initial values for the fields
         workingDirField.setText(workingDir);
@@ -212,5 +252,7 @@ public class HomeController extends DefaultController {
         firstILENoField.setText(firstILENo);
         firstVENoField.setText(firstVENo);
         regexDelimiterField.setText(regexDelimiter);
+        forexFileField.setText(forexFile);
+        logListView.setItems(logList);
     }
 }

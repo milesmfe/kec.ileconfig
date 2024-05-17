@@ -2,6 +2,7 @@ package com.kec.ileconfig.process;
 
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.util.logging.Logger;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -25,6 +26,9 @@ public class Controller implements Runnable {
     private volatile double progress = 0.0; // Progress of the this process
     private final PropertyChangeSupport pcs = new PropertyChangeSupport(this); // Property change support for progress
 
+    private volatile String logMessage = ""; // Log message
+    private static final Logger logger = Logger.getLogger(Controller.class.getName()); // Logger
+
     private volatile int ileNoCount; // A counter for updating ILE entryNos with a given first index
     private volatile int veNoCount; // A counter for updating VE entryNos with a given first index
     private volatile Set<String> ileNoSet = new HashSet<>(); // A set for storing each unique ILE number
@@ -47,7 +51,7 @@ public class Controller implements Runnable {
      * @see Controller
      * 
      */
-    public Controller(String workingDir, String outputFolder, int firstILENo, int firstVENo, String regexDelimiter) {
+    public Controller(String workingDir, String outputFolder, int firstILENo, int firstVENo, String regexDelimiter, String forexFile) {
         this.outputDir = workingDir + File.separator + outputFolder;
         this.binDir = this.outputDir + File.separator + "IGNORE";
         ileNoCount = firstILENo;
@@ -56,6 +60,8 @@ public class Controller implements Runnable {
         String ileWorkingDir = workingDir + File.separator + "ILE";
         String ileOutputDir = outputDir + File.separator + "ILE";
         String ilebinDir = binDir + File.separator + "ILE";
+
+        ConfigMaps.setForexMap(this, forexFile);
 
         String veWorkingDir = workingDir + File.separator + "VE";
         String veOutputDir = outputDir + File.separator + "VE";
@@ -77,11 +83,18 @@ public class Controller implements Runnable {
         pcs.firePropertyChange("progress", oldProgress, progress);
     }
 
-    public void addProgressChangeListener(PropertyChangeListener listener) {
+    public void log(String logMessage) {
+        String oldLogMessage = this.logMessage;
+        this.logMessage = logMessage;
+        logger.info(logMessage);
+        pcs.firePropertyChange("log", oldLogMessage, logMessage);
+    }
+
+    public void addPropertyChangeListener(PropertyChangeListener listener) {
         pcs.addPropertyChangeListener(listener);
     }
 
-    public void removeProgressChangeListener(PropertyChangeListener listener) {
+    public void removePropertyChangeListener(PropertyChangeListener listener) {
         pcs.removePropertyChangeListener(listener);
     }
 
@@ -162,11 +175,11 @@ public class Controller implements Runnable {
                     try {
                         ExcelManagement.csvToExcel(csvEntry.getValue(), csvEntry.getKey());
                     } catch (Exception e) {
-                        System.err.println("Error processing file: " + csvEntry.getKey());
+                        log("Error processing file: " + csvEntry.getKey());
                         e.printStackTrace();
                         continue;
                     }
-                    System.out.println("Processed file: " + csvEntry.getKey());
+                    log("Processed file: " + csvEntry.getKey());
                 }
                 return null;
             }
@@ -198,15 +211,15 @@ public class Controller implements Runnable {
                 // Wait for saveExcelThread to complete
                 saveExcelThread.join();
             } catch (InterruptedException e) {
-                System.out.println("Error: Excel save thread interrupted");
+                log("Error: Excel save thread interrupted");
                 e.printStackTrace();
             }
-            System.out.println("Final ILE No: " + ileNoCount);
-            System.out.println("Final VE No: " + veNoCount);
+            log("Final ILE No: " + ileNoCount);
+            log("Final VE No: " + veNoCount);
 
             setProgress(1.0);
         } catch (InterruptedException e) {
-            System.out.println("Error: ILE and VE threads interrupted");
+            log("Error: ILE and VE threads interrupted");
             e.printStackTrace();
         }
     }
