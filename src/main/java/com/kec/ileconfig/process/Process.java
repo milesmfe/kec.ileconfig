@@ -56,47 +56,53 @@ public class Process implements Runnable {
     }
 
     protected HashMap<String, String[][]> getSplitOutputCSVMap(int numberOfSplits) {
-        HashMap<String, String[][]> splitOutputCSVMap = new HashMap<>();
-        for (Entry<String, String[][]> entry : getCSVMap().entrySet()) {
-            String key = entry.getKey();
-            String[][] data = entry.getValue();
-    
-            int rowsPerSplit = data.length / numberOfSplits;
-            int remainingRows = data.length % numberOfSplits;
-    
-            int startIdx = 0;
-            int endIdx = 0;
-    
-            for (int splitNum = 0; splitNum < numberOfSplits; splitNum++) {
-                String newKey = key.replace(".xlsx", " - " + (char)('A' + splitNum) + ".xlsx");
-    
-                // Ensure that the row above the split line has an even row index
-                if (startIdx > 0 && startIdx % 2 != 0) {
-                    startIdx++;
+        try {
+            HashMap<String, String[][]> splitOutputCSVMap = new HashMap<>();
+            for (Entry<String, String[][]> entry : getCSVMap().entrySet()) {
+                String key = entry.getKey();
+                String[][] data = entry.getValue();
+        
+                int rowsPerSplit = data.length / numberOfSplits;
+                int remainingRows = data.length % numberOfSplits;
+        
+                int startIdx = 0;
+                int endIdx = 0;
+        
+                for (int splitNum = 0; splitNum < numberOfSplits; splitNum++) {
+                    String newKey = key.replace(".xlsx", " - " + (char)('A' + splitNum) + ".xlsx");
+        
+                    // Ensure that the row above the split line has an even row index
+                    if (startIdx > 0 && startIdx % 2 != 0) {
+                        startIdx++;
+                    }
+
+                    // Calculate the end index for this split
+                    endIdx = Math.min(startIdx + rowsPerSplit, data.length - 1);
+
+                    // Create the split array
+                    String[][] splitData = new String[endIdx - startIdx + 1][data[0].length];
+
+                    // Copy the header to the split array
+                    splitData[0] = data[0];
+
+                    // Copy the rows to the split array
+                    for (int i = startIdx + 1; i <= endIdx; i++) {
+                        splitData[i - startIdx] = data[i];
+                    }
+        
+                    // Store the split data in splitOutputCSVMap
+                    splitOutputCSVMap.put(newKey, splitData);
+        
+                    // Update start index for the next split
+                    startIdx = endIdx;
                 }
-
-                // Calculate the end index for this split
-                endIdx = Math.min(startIdx + rowsPerSplit, data.length - 1);
-
-                // Create the split array
-                String[][] splitData = new String[endIdx - startIdx + 1][data[0].length];
-
-                // Copy the header to the split array
-                splitData[0] = data[0];
-
-                // Copy the rows to the split array
-                for (int i = startIdx + 1; i <= endIdx; i++) {
-                    splitData[i - startIdx] = data[i];
-                }
-    
-                // Store the split data in splitOutputCSVMap
-                splitOutputCSVMap.put(newKey, splitData);
-    
-                // Update start index for the next split
-                startIdx = endIdx;
             }
+            return splitOutputCSVMap;
+        } catch (Exception e) {
+            e.printStackTrace();
+            controller.log("Error splitting files");
+            return null;
         }
-        return splitOutputCSVMap;
     }
     
 
@@ -156,7 +162,7 @@ public class Process implements Runnable {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            System.out.println("Error processing files");
+            controller.log("Error processing files");
         }
     }
 
@@ -227,7 +233,7 @@ public class Process implements Runnable {
             return out;
         } catch (IOException | IndexOutOfBoundsException e) {
             // Handle IOException
-            System.err.println("Error processing file: " + filePath);
+            controller.log("Error processing file: " + filePath);
             return null;
         }
     }

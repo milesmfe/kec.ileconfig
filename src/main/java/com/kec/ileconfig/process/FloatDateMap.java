@@ -1,7 +1,11 @@
 package com.kec.ileconfig.process;
 
 import java.io.FileInputStream;
-import java.util.*;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+import java.util.TreeMap;
 
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
@@ -10,48 +14,20 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 public class FloatDateMap {
-    private TreeMap<Float, DatePair> map;
+    private TreeMap<Date, Float> map;
 
     public FloatDateMap() {
         map = new TreeMap<>();
     }
 
-    // Method to add a float and its corresponding date pair to the map
-    public void add(float floatValue, Date lowerBound, Date upperBound) {
-        map.put(floatValue, new DatePair(lowerBound, upperBound));
+    // Method to add a float and its corresponding date to the map
+    public void add(Date date, float floatValue) {
+        map.put(date, floatValue);
     }
 
     // Method to find the float given a date
     public Float findFloatFromDate(Date date) {
-        Map.Entry<Float, DatePair> entry = map.floorEntry(Float.MAX_VALUE); // Get the entry with the highest float value
-        while (entry != null && !isDateInRange(date, entry.getValue())) {
-            entry = map.lowerEntry(entry.getKey()); // Move to the next entry with a lower float value
-        }
-        return (entry != null) ? entry.getKey() : null;
-    }
-
-    // Helper method to check if a date is within the range of a DatePair
-    private boolean isDateInRange(Date date, DatePair datePair) {
-        return !date.before(datePair.getLowerBound()) && date.before(datePair.getUpperBound());
-    }
-
-    // Inner class to represent a pair of dates
-    private class DatePair {
-        private Date lowerBound;
-        private Date upperBound;
-
-        public DatePair(Date lowerBound, Date upperBound) {
-            this.lowerBound = lowerBound;
-            this.upperBound = upperBound;
-        }
-
-        public Date getLowerBound() {
-            return lowerBound;
-        }
-
-        public Date getUpperBound() {
-            return upperBound;
-        }
+        return map.get(date);
     }
 
     public static FloatDateMap populateFromExcel(String filePath) {
@@ -67,19 +43,16 @@ public class FloatDateMap {
                 if (row.getRowNum() == 0) // Skip header row
                     continue;
 
-                Cell lowerCell = row.getCell(0);
-                Cell upperCell = row.getCell(1);
-                Cell eurCell = row.getCell(2);
-                Cell czkCell = row.getCell(3);
+                Cell dateCell = row.getCell(1);
+                Cell czkCell = row.getCell(5);
 
-                // Assuming Lower, Upper, EUR, CZK are in columns A, B, C, D respectively
-                Date lowerDate = lowerCell.getDateCellValue();
-                Date upperDate = upperCell.getDateCellValue();
-                float eurValue = (float) eurCell.getNumericCellValue();
-                float czkValue = (float) czkCell.getNumericCellValue();
+                String dateString = dateCell.getStringCellValue();
+                float czkValue = Float.parseFloat(czkCell.getStringCellValue());
 
-                floatDateMap.add(eurValue, lowerDate, upperDate);
-                floatDateMap.add(czkValue, lowerDate, upperDate);
+                // Parse Date
+                Date date = parseDate(dateString);
+
+                floatDateMap.add(date, czkValue);
             }
 
             workbook.close();
@@ -91,5 +64,11 @@ public class FloatDateMap {
             e.printStackTrace();
             return null;
         }
+    }
+
+    // Helper method to parse Date from string
+    private static Date parseDate(String dateString) throws ParseException {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
+        return dateFormat.parse(dateString);
     }
 }

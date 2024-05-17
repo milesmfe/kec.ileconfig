@@ -15,7 +15,8 @@ public class Settings {
         OUTPUT_FOLDER_HISTORY(""),
         FIRST_ILE_NO_HISTORY(""),
         FIRST_VE_NO_HISTORY(""),
-        REGEX_DELIMITER_HISTORY("");
+        REGEX_DELIMITER_HISTORY(""),
+        FOREX_FILE_HISTORY("");
 
         private final Object defaultValue;
 
@@ -26,6 +27,14 @@ public class Settings {
         public Object getDefaultValue() {
             return defaultValue;
         }
+    }
+
+    public static String getForexFileHistory() {
+        return getSetting(Setting.FOREX_FILE_HISTORY);
+    }
+
+    public static void setForexFileHistory(String forexFile) {
+        setSetting(Setting.FOREX_FILE_HISTORY, forexFile);
     }
 
     public static String getWorkingDirHistory() {

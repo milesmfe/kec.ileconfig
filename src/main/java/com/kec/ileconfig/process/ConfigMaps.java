@@ -3,6 +3,7 @@ package com.kec.ileconfig.process;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -327,8 +328,7 @@ public class ConfigMaps {
             Map.entry("122360", new CustomerEntry("122360NL", "Romazo")));
 
 
-    // private static final FloatDateMap forexMap = FloatDateMap.populateFromExcel(null);
-
+    private static Map<Controller, FloatDateMap> forexMap = new HashMap<>();
 
     public static String[] getILEFields() {
         return ILEFields.clone();
@@ -354,20 +354,24 @@ public class ConfigMaps {
         return customerMap.get(customerId);
     }
 
-    // public static FloatDateMap getForexMap() {
-    //     return forexMap;
-    // }
+    public static void setForexMap(Controller controller, String fileLocation) {
+        ConfigMaps.forexMap.put(controller, FloatDateMap.populateFromExcel(fileLocation));
+    }
 
-    // public static Float getForexRateFor(String date) {
-    //     SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yy");
-    //     try {
-    //         Date formattedDate = dateFormat.parse(date);
-    //         return forexMap.findFloatFromDate(formattedDate);
-    //     } catch (ParseException e) {
-    //         e.printStackTrace();
-    //         return null;
-    //     }
-    // }
+    public static FloatDateMap getForexMap(Controller controller) {
+        return forexMap.get(controller);
+    }
+
+    public static Float getForexRateFor(Controller controller, String date) {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yy");
+        try {
+            Date formattedDate = dateFormat.parse(date);
+            return forexMap.get(controller).findFloatFromDate(formattedDate);
+        } catch (ParseException | NullPointerException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 
     private ConfigMaps() {
         throw new AssertionError("Do not instantiate ConfigMaps");
