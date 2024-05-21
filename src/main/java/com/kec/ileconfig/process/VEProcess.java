@@ -144,7 +144,7 @@ public class VEProcess extends Process {
                     // If the actual sales amount is 0 and the expected sales amount is not 0,
                     // update the actual sales amount to the expected sales amount and set the
                     // expected sales amount to 0
-                    controller.log("Updating sales and cost amount for row [" + rowIdx + "]");
+                    // controller.log("Updating sales and cost amount for row [" + rowIdx + "]");
                     if (Float.valueOf(salesAmountActual) == 0 && Float.valueOf(salesAmountExpt) != 0) {
                         salesAmountActual = salesAmountExpt;
                         salesAmountExpt = "0";
