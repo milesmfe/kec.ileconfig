@@ -34,6 +34,7 @@ public class ILEProcess extends Process {
             try {
                 entryNo = Integer.parseInt(output[i][entryNoIdx]) * -1;
             } catch (NumberFormatException e) {
+                addProblemEntry(entryNo.toString());
                 controller.log("Error parsing ILE Entry No");
                 continue;
             }

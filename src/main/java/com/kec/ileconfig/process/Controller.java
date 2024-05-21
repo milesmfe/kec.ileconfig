@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
@@ -51,7 +52,8 @@ public class Controller implements Runnable {
      * @see Controller
      * 
      */
-    public Controller(String workingDir, String outputFolder, int firstILENo, int firstVENo, String regexDelimiter, String forexFile) {
+    public Controller(String workingDir, String outputFolder, int firstILENo, int firstVENo, String regexDelimiter,
+            String forexFile) {
         this.outputDir = workingDir + File.separator + outputFolder;
         this.binDir = this.outputDir + File.separator + "IGNORE";
         ileNoCount = firstILENo;
@@ -200,10 +202,53 @@ public class Controller implements Runnable {
 
             // Run once both processes have completed
             mapEntryNos(); // Map every entry number once all inputs are processed
-            // outputCSVMap.putAll(ileProcess.getCSVMap());
-            // outputCSVMap.putAll(veProcess.getCSVMap());
             outputCSVMap.putAll(ileProcess.getSplitOutputCSVMap(10));
             outputCSVMap.putAll(veProcess.getSplitOutputCSVMap(10));
+
+            Set<String> veProblemEntries = veProcess.getProblemEntries();
+            Set<String> ileProblemEntries = ileProcess.getProblemEntries();
+
+            // Create a new map to store problem entries
+            HashMap<String, String[][]> newEntriesMap = new HashMap<>();
+
+            // Use an iterator to avoid ConcurrentModificationException
+            for (Iterator<Entry<String, String[][]>> it = outputCSVMap.entrySet().iterator(); it.hasNext();) {
+                Entry<String, String[][]> entry = it.next();
+                String[][] data = entry.getValue();
+                ArrayList<String[]> problemLinesList = new ArrayList<>();
+                ArrayList<String[]> remainingLinesList = new ArrayList<>();
+                remainingLinesList.add(data[0]); // Add header row to remaining lines
+
+                for (int i = 1; i < data.length; i++) {
+                    String entryNo = data[i][0];
+                    if (veProblemEntries.contains(entryNo) || ileProblemEntries.contains(entryNo)) {
+                        problemLinesList.add(data[i]);
+                    } else {
+                        remainingLinesList.add(data[i]);
+                    }
+                }
+
+                // Update the original entry with remaining lines if there are changes
+                if (remainingLinesList.size() < data.length) {
+                    String[][] remainingLines = new String[remainingLinesList.size()][data[0].length];
+                    remainingLinesList.toArray(remainingLines);
+                    entry.setValue(remainingLines);
+                }
+
+                // Add new entry with problem lines to the newEntriesMap
+                if (!problemLinesList.isEmpty()) {
+                    String[][] problemLines = new String[problemLinesList.size() + 1][data[0].length];
+                    problemLines[0] = data[0];
+                    for (int i = 0; i < problemLinesList.size(); i++) {
+                        problemLines[i + 1] = problemLinesList.get(i);
+                    }
+                    newEntriesMap.put(entry.getKey().replace(".xlsx", " - PROBLEM.xlsx"), problemLines);
+                }
+            }
+
+            // Add all new problem entries to the original map
+            outputCSVMap.putAll(newEntriesMap);
+
             setProgress(0.8);
             Thread saveExcelThread = new Thread(saveExcelTask);
             saveExcelThread.start();
@@ -223,4 +268,5 @@ public class Controller implements Runnable {
             e.printStackTrace();
         }
     }
+
 }

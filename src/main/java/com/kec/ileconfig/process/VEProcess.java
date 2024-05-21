@@ -56,6 +56,7 @@ public class VEProcess extends Process {
                 veILEEntryNo = Integer.parseInt(output[i][veILEEntryNoIdx]) * -1;
             } catch (NumberFormatException e) {
                 controller.log("Error parsing ILE Entry No");
+                addProblemEntry(output[i][entryNoIdx]);
                 continue;
             }
             Integer entryNo = 0;
@@ -63,6 +64,7 @@ public class VEProcess extends Process {
                 entryNo = Integer.parseInt(output[i][entryNoIdx]) * -1;
             } catch (NumberFormatException e) {
                 controller.log("Error parsing ILE Entry No");
+                addProblemEntry(output[i][entryNoIdx]);
                 continue;
             }
             String adjustmentType = "Positive";
@@ -107,6 +109,7 @@ public class VEProcess extends Process {
 
             if (exchangeFactor == null) {
                 controller.log("Error: Exchange rate not found for date " + postingDate);
+                addProblemEntry(output[rowIdx][entryNoIdx]);
                 continue;
             }
 
@@ -137,6 +140,7 @@ public class VEProcess extends Process {
                     costAmountExpt = String.valueOf(Float.valueOf(costAmountExpt) * exchangeFactor);
                 } catch (NumberFormatException e) {
                     controller.log("Error: " + e.getMessage());
+                    addProblemEntry(output[rowIdx][entryNoIdx]);
                     continue;
                 }
 
@@ -161,6 +165,7 @@ public class VEProcess extends Process {
                     
                 } catch (NumberFormatException | NullPointerException e) {
                     controller.log("Error: " + e.getMessage());
+                    addProblemEntry(output[rowIdx][entryNoIdx]);
                     continue;
                 }
             }

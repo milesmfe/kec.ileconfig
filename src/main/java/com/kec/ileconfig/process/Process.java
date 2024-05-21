@@ -2,7 +2,10 @@ package com.kec.ileconfig.process;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.Map.Entry;
 
 import com.kec.ileconfig.io.CSVManagement;
@@ -21,6 +24,7 @@ public class Process implements Runnable {
     protected final String regexDelimiter; // Delimiter for splitting data in the first column of the csv
 
     protected final HashMap<String, String[][]> outputCSVMap; // Maps csv data structures to file paths
+    protected final Set<String> problemEntries; // Maps error data structures to file paths
 
     // Field indices
     protected final int entryNoIdx = 0; // Entry Number
@@ -34,13 +38,15 @@ public class Process implements Runnable {
      * @param workingDir the location of (path to) all relevant files.
      * 
      */
-    public Process(Controller controller, String[] fields, String workingDir, String outputDir, String binDir, String regexDelimiter) {
+    public Process(Controller controller, String[] fields, String workingDir, String outputDir, String binDir,
+            String regexDelimiter) {
         this.controller = controller;
         this.fields = fields;
         this.workingDir = workingDir;
         this.outputDir = outputDir;
         this.binDir = binDir;
         this.outputCSVMap = new HashMap<>();
+        this.problemEntries = new HashSet<>();
         this.regexDelimiter = regexDelimiter;
     }
 
@@ -48,29 +54,29 @@ public class Process implements Runnable {
         FileManagement.createFolder(outputDir);
         HashMap<String, String[][]> output = new HashMap<>();
         for (Entry<String, String[][]> csvEntry : outputCSVMap.entrySet()) {
-            String[][] data = updateEntryNo(csvEntry.getValue());
-            data = updateCSVEntryOnGetCSVMap(data);
+            String[][] data = updateCSVEntryOnGetCSVMap(csvEntry.getValue());
+            data = updateEntryNo(data);
             output.put(csvEntry.getKey(), data);
         }
         return output;
     }
 
-    protected HashMap<String, String[][]> getSplitOutputCSVMap(int numberOfSplits) {
+    public HashMap<String, String[][]> getSplitOutputCSVMap(int numberOfSplits) {
         try {
             HashMap<String, String[][]> splitOutputCSVMap = new HashMap<>();
             for (Entry<String, String[][]> entry : getCSVMap().entrySet()) {
                 String key = entry.getKey();
                 String[][] data = entry.getValue();
-        
+
                 int rowsPerSplit = data.length / numberOfSplits;
                 int remainingRows = data.length % numberOfSplits;
-        
+
                 int startIdx = 0;
                 int endIdx = 0;
-        
+
                 for (int splitNum = 0; splitNum < numberOfSplits; splitNum++) {
-                    String newKey = key.replace(".xlsx", " - " + (char)('A' + splitNum) + ".xlsx");
-        
+                    String newKey = key.replace(".xlsx", " - " + (char) ('A' + splitNum) + ".xlsx");
+
                     // Ensure that the row above the split line has an even row index
                     if (startIdx > 0 && startIdx % 2 != 0) {
                         startIdx++;
@@ -89,10 +95,10 @@ public class Process implements Runnable {
                     for (int i = startIdx + 1; i <= endIdx; i++) {
                         splitData[i - startIdx] = data[i];
                     }
-        
+
                     // Store the split data in splitOutputCSVMap
                     splitOutputCSVMap.put(newKey, splitData);
-        
+
                     // Update start index for the next split
                     startIdx = endIdx;
                 }
@@ -104,22 +110,28 @@ public class Process implements Runnable {
             return null;
         }
     }
-    
+
+    public Set<String> getProblemEntries() {
+        Set<String> updatedProblemEntries = new HashSet<>();
+        for (String entryNo : problemEntries) {
+            updatedProblemEntries.add(controller.getEntryNo(entryNo));
+        }
+        return updatedProblemEntries;
+    }
 
     protected String[][] generateBuddyArray(String[][] input) {
         return input.clone();
     }
-
 
     private String[][] combineArrays(String[][] buddy, String[][] original) {
         int length = buddy.length;
         if (length != original.length) {
             throw new IllegalArgumentException("Arrays must be of the same length");
         }
-    
+
         int columns = buddy[0].length;
         String[][] combinedArray = new String[length * 2 - 1][columns];
-        
+
         // Add header from original
         combinedArray[0] = original[0];
 
@@ -130,10 +142,9 @@ public class Process implements Runnable {
             // Add entries from original
             combinedArray[2 * i] = buddy[i];
         }
-    
+
         return combinedArray;
     }
-
 
     @Override
     public void run() {
@@ -170,6 +181,10 @@ public class Process implements Runnable {
         return input.clone();
     }
 
+    protected void addProblemEntry(String entryNo) {
+        problemEntries.add(entryNo);
+    }
+
     protected String[][] updateEntryNo(String[][] input) {
         String[][] output = input.clone();
         for (int rowIdx = 1; rowIdx < output.length; rowIdx++) {
@@ -196,7 +211,8 @@ public class Process implements Runnable {
         return true;
     }
 
-    protected void addEntryNoToSet(String entryNo) {}
+    protected void addEntryNoToSet(String entryNo) {
+    }
 
     protected String[][] processDataPortCSV(String filePath) {
         try {
