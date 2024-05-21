@@ -118,7 +118,7 @@ public class Process implements Runnable {
         }
     
         int columns = buddy[0].length;
-        String[][] combinedArray = new String[length * 2][columns];
+        String[][] combinedArray = new String[length * 2 - 1][columns];
         
         // Add header from original
         combinedArray[0] = original[0];
