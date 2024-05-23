@@ -237,7 +237,7 @@ public class Process implements Runnable {
                     processedCSV[rowIdx][custIdx] = ConfigMaps.getCustomerMapFor(custValue).getNAV17();
                 }
                 // Change all location codes to HISTORY
-                processedCSV[rowIdx][locationCodeIdx] = "CUS-HIS";
+                processedCSV[rowIdx][locationCodeIdx] = "Y-HISTORY";
 
                 // Update the controller entry number set
                 this.addEntryNoToSet(processedCSV[rowIdx][entryNoIdx]);
