@@ -125,7 +125,7 @@ public class VEProcess extends Process {
                 output[i][costAmtExptIdx] = String.valueOf(costAmtExptFloat * -1);
                 output[i][costAmtActACYIdx] = String.valueOf(costAmtActACYFloat * -1);
                 output[i][costAmtActExpACYIdx] = String.valueOf(costAmtActExpACYFloat * -1);
-                output[i][ileTypeIDX] = adjustmentType + "Adjustment";
+                output[i][ileTypeIDX] = adjustmentType + " Adjmt.";
                 output[i][valuedQuantityIdx] = String.valueOf(quantityFloat * -1);
                 output[i][invoicedQuantityIdx] = String.valueOf(invoicedQuantityFloat * -1);
                 output[i][ileQuantityIdx] = String.valueOf(ileQuantityFloat * -1);

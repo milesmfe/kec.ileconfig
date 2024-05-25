@@ -45,7 +45,7 @@ public class ILEProcess extends Process {
             if (quantityFloat >= 0) {
                 adjustmentType = "Negative";
             }        
-            output[i][entryTypeIdx] = adjustmentType + "Adjustment";
+            output[i][entryTypeIdx] = adjustmentType + " Adjmt.";
             output[i][quantityIdx] = String.valueOf(quantityFloat * -1);
             output[i][invoicedQuantityIdx] = String.valueOf(invoicedQuantityFloat * -1);
             output[i][entryNoIdx] = String.valueOf(entryNo);
