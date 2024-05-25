@@ -289,7 +289,7 @@ public class ConfigMaps {
         // "Variant Code",
         "Adjustment",
         "Average Cost Exception",
-        "Capacity Ledger Entry No.",
+        // "Capacity Ledger Entry No.",
         "Type",
         // "No.",
         // "Return Reason Code",
