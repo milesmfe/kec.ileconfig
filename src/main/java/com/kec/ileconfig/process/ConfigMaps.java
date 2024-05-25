@@ -261,7 +261,7 @@ public class ConfigMaps {
         "Gen. Prod. Posting Group",
         "Document Date",
         // "External Document No.",
-        "Cost Amount (Actual) (ACY)",
+        "Cost Amount (Actual) (ACY)", // 31
         "Cost Posted to G/L (ACY)",
         "Cost per Unit (ACY)",
         "Document Type",
@@ -279,7 +279,7 @@ public class ConfigMaps {
         "Sales Amount (Expected)", // 43
         "Cost Amount (Expected)", // 44
         "Cost Amount (Non-Invtbl.)",
-        "Cost Amount (Expected) (ACY)",
+        "Cost Amount (Expected) (ACY)", // 46
         "Cost Amount (Non-Invtbl.)(ACY)",
         "Expected Cost Posted to G/L",
         "Exp. Cost Posted to G/L (ACY)",
