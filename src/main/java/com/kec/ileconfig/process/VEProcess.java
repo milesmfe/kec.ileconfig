@@ -5,17 +5,6 @@ public class VEProcess extends Process {
     private final int entryNoIdx = 0; // Entry Number
     private final int veILEEntryNoIdx = 10; // Item Ledger Entry Number
 
-    private final int salesAmtExptIdx = 43; // Sales Amount (Expected)
-    private final int salesAmtActualIdx = 15; // Sales Amount (Actual)
-    private final int costAmtActualIdx = 24; // Cost Amount (Actual)
-    private final int costAmtExptIdx = 44; // Cost Amount (Expected)
-    private final int postingDateIdx = 2; // Posting Date
-
-    private final int ileTypeIDX = 3; // Entry Type
-    private final int valuedQuantityIdx = 11; // Quantity
-    private final int ileQuantityIdx = 12; // ILE Quantity
-    private final int invoicedQuantityIdx = 13; // Invoiced Quantity
-
     /**
      * Create a new {@link #VEProcess} for processing VE csv files
      * 
@@ -34,7 +23,37 @@ public class VEProcess extends Process {
     }
 
     @Override
+    protected String[][] onAfterProcessDataPortCSV(String[][] input) {
+        int costAmtActualIdx = 24; // Cost Amount (Actual)
+        int costAmtExptIdx = 49; // Cost Amount (Expected)
+        int costAmtActACYIdx = 33; // Cost Amount (Actual) (ACY)
+        int costAmtActExpACYIdx = 51; // Cost Amount (Expected) (ACY)  
+        
+        String[][] output = new String[input.length][];
+        for (int i = 0; i < input.length; i++) {
+            output[i] = new String[input[i].length];
+            System.arraycopy(input[i], 0, output[i], 0, input[i].length);
+        }
+
+        for (int i = 1; i < input.length; i++) {
+            output[i][costAmtActACYIdx] =  output[i][costAmtActualIdx];
+            output[i][costAmtActExpACYIdx] = output[i][costAmtExptIdx];
+        }
+        return output;
+    }
+
+    @Override
     protected String[][] generateBuddyArray(String[][] input) {
+        int salesAmtExptIdx = 48; // Sales Amount (Expected)
+        int salesAmtActualIdx = 15; // Sales Amount (Actual)
+        int costAmtActualIdx = 24; // Cost Amount (Actual)
+        int costAmtExptIdx = 49; // Cost Amount (Expected)
+        int ileTypeIDX = 3; // Entry Type
+        int valuedQuantityIdx = 11; // Quantity
+        int ileQuantityIdx = 12; // ILE Quantity
+        int invoicedQuantityIdx = 13; // Invoiced Quantity
+        int costAmtActACYIdx = 33; // Cost Amount (Actual) (ACY)
+        int costAmtActExpACYIdx = 51; // Cost Amount (Expected) (ACY)
         // Create a new array with the same dimensions as the input array
         String[][] output = new String[input.length][];
 
@@ -67,26 +86,70 @@ public class VEProcess extends Process {
                 addProblemEntry(output[i][entryNoIdx]);
                 continue;
             }
-            String adjustmentType = "Positive";
-            float quantityFloat = Float.parseFloat(quantity);
-            float invoicedQuantityFloat = Float.parseFloat(invoicedQuantity);
-            float ileQuantityFloat = Float.parseFloat(ileQuantity);
-            if (quantityFloat >= 0) {
-                adjustmentType = "Negative";
+            String salesAmountActual = output[i][salesAmtActualIdx];
+            String salesAmountExpt = output[i][salesAmtExptIdx];
+            String costAmountActual = output[i][costAmtActualIdx];
+            String costAmountExpt = output[i][costAmtExptIdx];
+
+            if (salesAmountActual != null && salesAmountExpt != null && costAmountActual != null && costAmountExpt != null) {
+                if (salesAmountActual.indexOf(".") != salesAmountActual.lastIndexOf(".")) {
+                    salesAmountActual = salesAmountActual.substring(0, salesAmountActual.indexOf("."))
+                            + salesAmountActual.substring(salesAmountActual.indexOf(".") + 1);
+                }
+                if (salesAmountExpt.indexOf(".") != salesAmountExpt.lastIndexOf(".")) {
+                    salesAmountExpt = salesAmountExpt.substring(0, salesAmountExpt.indexOf("."))
+                            + salesAmountExpt.substring(salesAmountExpt.indexOf(".") + 1);
+                }
+                if (costAmountActual.indexOf(".") != costAmountActual.lastIndexOf(".")) {
+                    costAmountActual = costAmountActual.substring(0, costAmountActual.indexOf("."))
+                            + costAmountActual.substring(costAmountActual.indexOf(".") + 1);
+                }
+                if (costAmountExpt.indexOf(".") != costAmountExpt.lastIndexOf(".")) {
+                    costAmountExpt = costAmountExpt.substring(0, costAmountExpt.indexOf("."))
+                            + costAmountExpt.substring(costAmountExpt.indexOf(".") + 1);
+                }
             }
-            output[i][ileTypeIDX] = adjustmentType + "Adjustment";
-            output[i][valuedQuantityIdx] = String.valueOf(quantityFloat * -1);
-            output[i][invoicedQuantityIdx] = String.valueOf(invoicedQuantityFloat * -1);
-            output[i][ileQuantityIdx] = String.valueOf(ileQuantityFloat * -1);
-            output[i][veILEEntryNoIdx] = String.valueOf(veILEEntryNo);
-            output[i][entryNoIdx] = String.valueOf(entryNo);
-            addEntryNoToSet(entryNo.toString());
+            try {
+                String adjustmentType = "Positive";
+                float quantityFloat = Float.parseFloat(quantity);
+                float invoicedQuantityFloat = Float.parseFloat(invoicedQuantity);
+                float ileQuantityFloat = Float.parseFloat(ileQuantity);
+                float costAmtActualFloat = Float.parseFloat(output[i][costAmtActualIdx]);
+                float costAmtExptFloat = Float.parseFloat(output[i][costAmtExptIdx]);
+                float costAmtActACYFloat = Float.parseFloat(output[i][costAmtActACYIdx]);
+                float costAmtActExpACYFloat = Float.parseFloat(output[i][costAmtActExpACYIdx]);
+                if (quantityFloat >= 0) {
+                    adjustmentType = "Negative";
+                }
+                output[i][costAmtActualIdx] = String.valueOf(costAmtActualFloat * -1);
+                output[i][costAmtExptIdx] = String.valueOf(costAmtExptFloat * -1);
+                output[i][costAmtActACYIdx] = String.valueOf(costAmtActACYFloat * -1);
+                output[i][costAmtActExpACYIdx] = String.valueOf(costAmtActExpACYFloat * -1);
+                output[i][ileTypeIDX] = adjustmentType + "Adjustment";
+                output[i][valuedQuantityIdx] = String.valueOf(quantityFloat * -1);
+                output[i][invoicedQuantityIdx] = String.valueOf(invoicedQuantityFloat * -1);
+                output[i][ileQuantityIdx] = String.valueOf(ileQuantityFloat * -1);
+                output[i][veILEEntryNoIdx] = String.valueOf(veILEEntryNo);
+                output[i][entryNoIdx] = String.valueOf(entryNo);
+                addEntryNoToSet(entryNo.toString());
+                output[i][salesAmtActualIdx] = "0"; // Zero sales amount
+                output[i][salesAmtExptIdx] = "0"; // Zero sales amount
+            } catch (NumberFormatException e) {
+                controller.log("Error parsing quantity");
+                addProblemEntry(output[i][entryNoIdx]);
+                continue;
+            }
         }
         return output;
     }
 
     @Override
     protected String[][] updateCSVEntryOnGetCSVMap(String[][] input) {
+        int salesAmtExptIdx = 43; // Sales Amount (Expected)
+        int salesAmtActualIdx = 15; // Sales Amount (Actual)
+        int costAmtActualIdx = 24; // Cost Amount (Actual)
+        int costAmtExptIdx = 44; // Cost Amount (Expected)
+        int postingDateIdx = 2; // Posting Date
         String[] newHeaders = ConfigMaps.getVEOutputFields(); // Get new headers
         String[][] original = updateILEEntryNo(input.clone()); // Clone the original data and update if necessary
         String[][] output = new String[original.length][newHeaders.length];
@@ -118,18 +181,23 @@ public class VEProcess extends Process {
             String costAmountActual = output[rowIdx][costAmtActualIdx];
             String costAmountExpt = output[rowIdx][costAmtExptIdx];
 
-            if (salesAmountActual != null && salesAmountExpt != null && costAmountActual != null && costAmountExpt != null) {
+            if (salesAmountActual != null && salesAmountExpt != null && costAmountActual != null
+                    && costAmountExpt != null) {
                 if (salesAmountActual.indexOf(".") != salesAmountActual.lastIndexOf(".")) {
-                    salesAmountActual = salesAmountActual.substring(0, salesAmountActual.indexOf(".")) + salesAmountActual.substring(salesAmountActual.indexOf(".") + 1);
+                    salesAmountActual = salesAmountActual.substring(0, salesAmountActual.indexOf("."))
+                            + salesAmountActual.substring(salesAmountActual.indexOf(".") + 1);
                 }
                 if (salesAmountExpt.indexOf(".") != salesAmountExpt.lastIndexOf(".")) {
-                    salesAmountExpt = salesAmountExpt.substring(0, salesAmountExpt.indexOf(".")) + salesAmountExpt.substring(salesAmountExpt.indexOf(".") + 1);
+                    salesAmountExpt = salesAmountExpt.substring(0, salesAmountExpt.indexOf("."))
+                            + salesAmountExpt.substring(salesAmountExpt.indexOf(".") + 1);
                 }
                 if (costAmountActual.indexOf(".") != costAmountActual.lastIndexOf(".")) {
-                    costAmountActual = costAmountActual.substring(0, costAmountActual.indexOf(".")) + costAmountActual.substring(costAmountActual.indexOf(".") + 1);
+                    costAmountActual = costAmountActual.substring(0, costAmountActual.indexOf("."))
+                            + costAmountActual.substring(costAmountActual.indexOf(".") + 1);
                 }
                 if (costAmountExpt.indexOf(".") != costAmountExpt.lastIndexOf(".")) {
-                    costAmountExpt = costAmountExpt.substring(0, costAmountExpt.indexOf(".")) + costAmountExpt.substring(costAmountExpt.indexOf(".") + 1);
+                    costAmountExpt = costAmountExpt.substring(0, costAmountExpt.indexOf("."))
+                            + costAmountExpt.substring(costAmountExpt.indexOf(".") + 1);
                 }
 
                 // Apply forex rate to the sales and cost amounts
@@ -162,12 +230,15 @@ public class VEProcess extends Process {
                     output[rowIdx][salesAmtExptIdx] = salesAmountExpt;
                     output[rowIdx][costAmtActualIdx] = costAmountActual;
                     output[rowIdx][costAmtExptIdx] = costAmountExpt;
-                    
+
                 } catch (NumberFormatException | NullPointerException e) {
                     controller.log("Error: " + e.getMessage());
                     addProblemEntry(output[rowIdx][entryNoIdx]);
                     continue;
                 }
+            } else {
+                controller.log("Error: Sales/Cost Values empty");
+                addProblemEntry(output[rowIdx][entryNoIdx]);
             }
         }
         return output;
