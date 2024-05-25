@@ -239,6 +239,8 @@ public class Process implements Runnable {
                 // Change all location codes to HISTORY
                 processedCSV[rowIdx][locationCodeIdx] = "Y-HISTORY";
 
+                //TODO: Add LJ-NL
+
                 // Update the controller entry number set
                 this.addEntryNoToSet(processedCSV[rowIdx][entryNoIdx]);
             }
@@ -246,11 +248,17 @@ public class Process implements Runnable {
             // Copy processed CSV data to the output array)
             System.arraycopy(processedCSV, 0, out, 1, processedCSV.length);
 
+            out = onAfterProcessDataPortCSV(out.clone());
+
             return out;
         } catch (IOException | IndexOutOfBoundsException e) {
             // Handle IOException
             controller.log("Error processing file: " + filePath);
             return null;
         }
+    }
+
+    protected String[][] onAfterProcessDataPortCSV(String[][] input) {
+        return input.clone();
     }
 }
