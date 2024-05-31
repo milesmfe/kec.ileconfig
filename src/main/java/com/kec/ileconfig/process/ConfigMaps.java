@@ -104,7 +104,7 @@ public class ConfigMaps {
             "Cost per Unit",
             "Sales Amount (Actual)",
             "Salespers./Purch. Code",
-            "Discount Amount",
+            "Discount Amount", // 17
             "User ID",
             "Source Code",
             "Applies-to Entry",

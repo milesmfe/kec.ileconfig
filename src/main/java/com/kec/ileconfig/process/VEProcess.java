@@ -149,6 +149,7 @@ public class VEProcess extends Process {
         int salesAmtActualIdx = 15; // Sales Amount (Actual)
         int costAmtActualIdx = 24; // Cost Amount (Actual)
         int costAmtExptIdx = 44; // Cost Amount (Expected)
+        int discountAmtIdx = 17; // Discount Amount
         int postingDateIdx = 2; // Posting Date
         String[] newHeaders = ConfigMaps.getVEOutputFields(); // Get new headers
         String[][] original = updateILEEntryNo(input.clone()); // Clone the original data and update if necessary
@@ -180,6 +181,7 @@ public class VEProcess extends Process {
             String salesAmountExpt = output[rowIdx][salesAmtExptIdx];
             String costAmountActual = output[rowIdx][costAmtActualIdx];
             String costAmountExpt = output[rowIdx][costAmtExptIdx];
+            String discountAmount = output[rowIdx][discountAmtIdx];
 
             if (salesAmountActual != null && salesAmountExpt != null && costAmountActual != null
                     && costAmountExpt != null) {
@@ -199,6 +201,10 @@ public class VEProcess extends Process {
                     costAmountExpt = costAmountExpt.substring(0, costAmountExpt.indexOf("."))
                             + costAmountExpt.substring(costAmountExpt.indexOf(".") + 1);
                 }
+                if (discountAmount.indexOf(".") != discountAmount.lastIndexOf(".")) {
+                    discountAmount = discountAmount.substring(0, discountAmount.indexOf("."))
+                            + discountAmount.substring(discountAmount.indexOf(".") + 1);
+                }
 
                 // Apply forex rate to the sales and cost amounts
                 try {
@@ -206,6 +212,7 @@ public class VEProcess extends Process {
                     salesAmountExpt = String.valueOf(Float.valueOf(salesAmountExpt) * exchangeFactor);
                     costAmountActual = String.valueOf(Float.valueOf(costAmountActual) * exchangeFactor);
                     costAmountExpt = String.valueOf(Float.valueOf(costAmountExpt) * exchangeFactor);
+                    discountAmount = String.valueOf(Float.valueOf(discountAmount) * exchangeFactor);
                 } catch (NumberFormatException e) {
                     controller.log("Error: " + e.getMessage());
                     addProblemEntry(output[rowIdx][entryNoIdx]);
@@ -230,6 +237,7 @@ public class VEProcess extends Process {
                     output[rowIdx][salesAmtExptIdx] = salesAmountExpt;
                     output[rowIdx][costAmtActualIdx] = costAmountActual;
                     output[rowIdx][costAmtExptIdx] = costAmountExpt;
+                    output[rowIdx][discountAmtIdx] = discountAmount;
 
                 } catch (NumberFormatException | NullPointerException e) {
                     controller.log("Error: " + e.getMessage());
